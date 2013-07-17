@@ -1,0 +1,315 @@
+Public MyFile As String
+Public Stopped As Boolean
+
+Global strpercent As Variant
+Global NewName As String
+
+
+Sub Pareto()
+    
+    Range("E1").Select
+    
+Application.ScreenUpdating = False
+       
+    Dim datareport As Workbook
+    If Workbooks(ThisWorkbook.Name).Worksheets(1).Range("G7").Value = "" Then
+    'Select workbook
+    Stopped = False
+    Workbook_Select.Show
+    If Stopped Then Exit Sub
+    
+    Workbooks(MyFile).Activate
+    
+    'Switch between workbooks
+    Set datareport = ActiveWorkbook
+    Workbooks(ThisWorkbook.Name).Worksheets(1).Range("G7").Value = datareport.Name
+    Workbooks(datareport.Name).Activate
+    
+    Else
+    Workbooks(Workbooks(ThisWorkbook.Name).Worksheets(1).Range("G7").Value).Activate
+    Set datareport = ActiveWorkbook
+    End If
+
+Application.ScreenUpdating = True
+
+    Dim strName As String
+    Dim strnumeric As Long
+    Dim strvalue As String
+    Dim strrightval As Integer
+    
+    strName = InputBox(Prompt:="Which column would you like to pareto: ", Title:="Column letter", Default:="A")
+    
+    If strName = "" Then Exit Sub
+    
+    'Subtotal by users chosen column
+    Application.DisplayAlerts = False
+    
+    On Error Resume Next
+    strnumeric = Range(strName & 1).Column
+    strvalue = Range(strName & 1).Value
+    
+    Do While Err.Number = 1004 Or IsNumeric(strName) Or strnumeric = 0 Or IsNumeric(Right(strName, 1)) Or strvalue = ""
+    
+    If Err.Number = 1004 Then
+    MsgBox "Please enter a valid column name", , "Invalid Column Name"
+    On Error GoTo 0
+    
+    ElseIf IsNumeric(strName) Then
+    MsgBox "Please enter a letter for column name", , "Invalid Column Name"
+    
+    ElseIf IsNumeric(Right(strName, 1)) Then
+    MsgBox "Please enter a letter for column name", , "Invalid Column Name"
+    
+    ElseIf strvalue = "" Then
+    MsgBox "Please enter a valid column name", , "Invalid Column Name"
+    
+    ElseIf Range(strName & 1).Value = "" Then
+    MsgBox "Please select a column with data and a heading", , "Invalid Column Name"
+            
+    End If
+    
+    strName = InputBox(Prompt:="Which column would you like to pareto: ", Title:="Column letter", Default:="A")
+    
+    If strName = "" Then Exit Sub
+    
+    strnumeric = Empty
+    strvalue = Empty
+    
+    On Error Resume Next
+    strnumeric = Range(strName & 1).Column
+    strvalue = Range(strName & 1).Value
+    On Error GoTo 0
+    
+    Loop
+        
+    Application.ScreenUpdating = False
+        
+    Columns(strName & ":" & strName).Copy
+    
+    Sheets.Add
+    ActiveSheet.Paste
+    
+    'Fix Heading in case Autofilter is on
+    Range("A1").Copy
+    Range("B2").PasteSpecial xlPasteValues
+    Rows("1:1").Delete
+    Range("B1").Cut
+    Range("A1").Insert shift:=xlDown
+    
+    Range("A1").Select
+    Selection.Font.Bold = True 'Bold the heading so Subtotal knows where to start for subtotal
+    
+    Cells.Sort Key1:=Range("A2"), Order1:=xlAscending, Header:=xlYes, _
+    OrderCustom:=1, MatchCase:=False, Orientation:=xlTopToBottom, _
+    DataOption1:=xlSortNormal
+        
+    Selection.Subtotal GroupBy:=1, Function:=xlCount, TotalList:=Array(1, 1) _
+        , Replace:=True, PageBreaks:=False, SummaryBelowData:=True
+    ActiveSheet.Outline.ShowLevels RowLevels:=2
+
+Application.DisplayAlerts = True
+
+    'Reset used range
+    a = ActiveSheet.UsedRange.Rows.Count
+
+    Range("A1", Range("B65536").End(xlUp)).Select
+    Selection.SpecialCells(xlCellTypeVisible).Select
+    Selection.Copy
+    
+    sheetname = Range("B1").Value
+    
+    Sheets.Add
+    
+    'Worksheet Name
+    
+    'Ask for name
+    Dim ActNm As String
+    
+    ActNm = ActiveSheet.Name
+    
+    On Error Resume Next
+    ActiveSheet.Name = "Pareto By " & sheetname
+    ActNm = ActiveSheet.Name
+    If Err.Number = 1004 Then
+    Do
+    ActiveSheet.Name = InputBox("Worksheet with that name already exists or the name may be too long, please enter a new name:")
+    Loop Until ActiveSheet.Name <> ActNm
+    End If
+    On Error GoTo 0
+
+    NewName = ActiveSheet.Name
+
+    ActiveSheet.Paste
+    
+    Application.DisplayAlerts = False
+    Worksheets((Sheets(ActiveSheet.Index + 1).Name)).Delete
+    Application.DisplayAlerts = True
+    
+    Selection.Replace what:="Count", Replacement:="", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+        
+    Range("A1").Value = Range("B1").Value
+    Range("B1").Value = "Total"
+    
+    Columns("A:B").Font.Bold = False
+    Range("A1:B1").Font.Bold = True
+    
+    Cells(Rows.Count, Range("A1").Column).End(xlUp).Value = "Grand Total"
+    Cells(Rows.Count, Range("A1").Column).End(xlUp).Font.Bold = True
+    Cells(Rows.Count, Range("B1").Column).End(xlUp).Font.Bold = True
+    
+    Cells.EntireColumn.AutoFit
+    
+    'Sort by most occurance
+    Columns("A:B").Sort Key1:=Range("B2"), Order1:=xlDescending, Header:=xlYes, _
+    OrderCustom:=1, MatchCase:=False, Orientation:=xlTopToBottom, _
+    DataOption1:=xlSortNormal
+        
+    Range("A1").Select
+    
+    '% of Total
+    Range("C1").FormulaR1C1 = "% of Total"
+    Range("C1").Font.Bold = True
+    Columns("C:C").EntireColumn.AutoFit
+    
+    Range("C2").FormulaR1C1 = "=RC[-1]/R2C2"
+    Range("C2").NumberFormat = "0.00%"
+    Range("C2").Copy
+    
+    If Application.CountA(Columns("C:C")) <> Columns("C:C").Cells.Count Then
+    Columns("C:C").SpecialCells(xlCellTypeBlanks).PasteSpecial Paste:=xlPasteFormulas
+    Columns("C:C").NumberFormat = "0.00%"
+    End If
+    
+    If Range("A3").NumberFormat <> "m/d/yyyy" And Range("A3").NumberFormat <> "h:mm AM/PM" Then
+        'Remove spaces
+        Columns("B:B").Insert shift:=xlToRight
+        Range("B1").FormulaR1C1 = "=TRIM(RC[-1])"
+        Range("B1").Copy
+        If Application.CountA(Columns("B:B")) <> Columns("B:B").Cells.Count Then
+        Columns("B:B").SpecialCells(xlCellTypeBlanks).PasteSpecial Paste:=xlPasteFormulas
+        End If
+        Columns("B:B").Copy
+        Columns("B:B").PasteSpecial Paste:=xlPasteValues
+        Columns("A:A").Delete shift:=xlToLeft
+    End If
+    
+    If Range("A2").Value <> "Grand Total" Then
+    Range("A3:D3").Cut
+    Rows("2:2").Insert shift:=xlDown
+    Range("D2").Cut Destination:=Range("D3")
+    Range("A2").Value = "Grand Total"
+    End If
+    
+    'Cumulative %
+    Range("D1").FormulaR1C1 = "Cumulative %"
+    Range("D1").Font.Bold = True
+    Columns("D:D").EntireColumn.AutoFit
+    
+    Range("D3").FormulaR1C1 = "=SUM(RC[-1],R[-1]C)"
+    Range("D3").Copy
+    Range("D3").PasteSpecial Paste:=xlPasteValues
+    Range("D3").Select
+    
+    Dim strpercents As Variant
+    
+    strpercent = 10
+
+    strpercents = InputBox(Prompt:="What % of data would you like to pareto (rest of the data will be combined into a single category)? Please enter a whole number between 1 and 100: ", _
+          Title:="Pareto % of Total", Default:="")
+
+    If strpercents = Empty Then
+
+        MsgBox "You did not enter a value. Value will default to 50", , "Notice"
+        strpercents = 0.5
+        
+    ElseIf IsNumeric(strpercents) = False Then
+        MsgBox "You entered an unknown value. Value will default to 50", , "Notice"
+        strpercents = 0.5
+            
+    ElseIf strpercents <> Empty And IsNumeric(strpercents) = True Then
+                
+            If strpercents > 100 Then
+            MsgBox "You entered a value greater than 100. Value will default to 50", , "Notice"
+            strpercents = 0.5
+            End If
+        
+            If strpercents < 0 Then
+            MsgBox "You entered a value less than 0. Value will default to 50", , "Notice"
+            strpercents = 0.5
+            End If
+                        
+            If strpercents > 0 And strpercents <= 100 And IsNumeric(strpercents) = True Then strpercents = strpercents / 100
+    
+    End If
+
+    Do While ActiveCell.Value < strpercents And ActiveCell.Offset(1, -1).Value <> ""
+    ActiveCell.Offset(1).Select
+    ActiveCell.FormulaR1C1 = "=SUM(R[-1]C,RC[-1])"
+    ActiveCell.Copy
+    ActiveCell.PasteSpecial xlPasteValues
+    Loop
+    
+    'Others not part of pareto chart
+    
+    ActiveCell.Offset(1, -3).Select
+       
+    With ActiveCell.EntireRow
+    .Insert shift:=xlDown
+    End With
+    
+    ActiveCell.Offset(0, 1).FormulaR1C1 = "=ROW(RC)"
+    strpercent = ActiveCell.Offset(0, 1).Value
+    ActiveCell.Offset(0, 1).ClearContents
+    
+    With ActiveCell.Offset(0, 0)
+    .Value = "Others"
+    .Font.Bold = True
+    End With
+    With ActiveCell.Offset(0, 1)
+    .Font.Bold = True
+    .FormulaR1C1 = "=Sum(R[1]C:R" & Cells(Cells.Rows.Count, "A").End(xlUp).Row + 1 & "C)"
+    End With
+    With ActiveCell.Offset(0, 2)
+    .Font.Bold = True
+    .FormulaR1C1 = "=Sum(R[1]C:R" & Cells(Cells.Rows.Count, "A").End(xlUp).Row + 1 & "C)"
+    End With
+    With ActiveCell.Offset(0, 3)
+    .Font.Bold = True
+    .FormulaR1C1 = "=SUM(RC[-1],R[-1]C)"
+    End With
+    
+    Columns("C:D").NumberFormat = "0.00%"
+    
+    Columns("A:D").Copy
+    Columns("A:D").PasteSpecial Paste:=xlPasteValues
+    
+    'Find empty cell after last used cell in a column
+    If WorksheetFunction.CountA(Cells) > 0 Then
+        Columns("A:A").Find(what:="*", After:=[A1], SearchOrder:=xlByRows, SearchDirection:=xlPrevious).Offset(1).Select
+    End If
+    
+    'Delete Unneeded Rows
+    Range(ActiveCell, Range("A65536").End(xlDown)).EntireRow.ClearContents
+
+    Range("A1").Select
+    
+    Worksheets((Sheets(ActiveSheet.Index + 1).Name)).Select
+    Range("A1").RemoveSubtotal
+
+    Cells.Sort Key1:=Range("A2"), Order1:=xlAscending, Header:=xlYes, _
+    OrderCustom:=1, MatchCase:=False, Orientation:=xlTopToBottom, _
+    DataOption1:=xlSortNormal
+    
+    Range("A1").Select
+    
+    'Create Pareto Chart
+    Call Create_Pareto_Chart
+    
+    'Format Pareto Chart
+    Call Format_Pareto_Chart
+    
+Application.ScreenUpdating = True
+
+End Sub
