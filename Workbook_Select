@@ -1,0 +1,19 @@
+Private Sub Ok_Button_Click()
+    MyFile = Me.ListBox.Value
+    Unload Me
+End Sub
+ 
+Private Sub Cancel_Button_Click()
+    Stopped = True
+    Unload Me
+End Sub
+ 
+Private Sub UserForm_Initialize()
+    Dim wkb As Workbook
+    
+    With Me.ListBox
+        For Each wkb In Application.Workbooks
+            .AddItem wkb.Name
+        Next wkb
+    End With
+End Sub
