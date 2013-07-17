@@ -1,0 +1,68 @@
+Sub Create_Pareto_Chart()
+
+    'Create Pareto Chart
+    Worksheets((Sheets(ActiveSheet.Index - 1).Name)).Select
+    Charts.Add
+    ActiveChart.ChartType = xlColumnClustered
+    ActiveChart.SetSourceData Source:=Sheets((Sheets(ActiveSheet.Index + 1).Name)).Range("A3" & ":" & "C" & strpercent), _
+        PlotBy:=xlColumns
+    ActiveChart.Location Where:=xlLocationAsObject, Name:=NewName
+    With ActiveChart
+        .HasTitle = True
+        .ChartTitle.Characters.Text = "Pareto Summary By " & Range("A1").Value
+        .Axes(xlCategory, xlPrimary).HasTitle = True
+        .Axes(xlCategory, xlPrimary).AxisTitle.Characters.Text = Range("A1").Value
+        .Axes(xlValue, xlPrimary).HasTitle = True
+        .Axes(xlValue, xlPrimary).AxisTitle.Characters.Text = Range("B1").Value
+    End With
+    With ActiveChart
+        .HasAxis(xlCategory, xlPrimary) = True
+        .HasAxis(xlValue, xlPrimary) = True
+    End With
+    ActiveChart.Axes(xlCategory, xlPrimary).CategoryType = xlAutomatic
+    ActiveChart.HasLegend = False
+    ActiveChart.HasDataTable = False
+    ActiveChart.SetSourceData Source:=Sheets((ActiveSheet.Name)).Range("A3" & ":" & "A" & strpercent, "B3" & ":" & "B" & strpercent) _
+        , PlotBy:=xlColumns
+    ActiveChart.Axes(xlCategory).Select
+        With Selection.TickLabels
+        .Orientation = -45
+        End With
+    ActiveChart.ChartArea.Select
+    
+    ActiveSheet.Shapes("Chart 1").IncrementLeft 98.25
+    ActiveSheet.Shapes("Chart 1").IncrementTop -86.25
+    
+    'Add Cumulative % of Total line
+    ActiveWindow.Visible = False
+    Range("D" & 3, Range("D" & strpercent)).Copy
+    ActiveSheet.ChartObjects("Chart 1").Activate
+    ActiveChart.ChartArea.Select
+    ActiveChart.SeriesCollection.Paste Rowcol:=xlColumns, SeriesLabels:=False, _
+        CategoryLabels:=False, Replace:=False, NewSeries:=True
+    ActiveChart.SeriesCollection(2).Select
+    Application.CutCopyMode = False
+    ActiveChart.SeriesCollection(2).ChartType = xlLineMarkers
+    ActiveChart.SeriesCollection(1).Select
+    ActiveChart.SeriesCollection(2).Select
+    ActiveChart.SeriesCollection(2).AxisGroup = 2
+    ActiveChart.Axes(xlValue).MajorGridlines.Select
+    ActiveChart.SeriesCollection(2).Select
+    ActiveChart.Axes(xlValue, xlSecondary).Select
+    With ActiveChart.Axes(xlValue, xlSecondary)
+        .MinimumScaleIsAuto = True
+        .MaximumScale = 1
+        .MinorUnitIsAuto = True
+        .MajorUnitIsAuto = True
+        .Crosses = xlAutomatic
+        .ReversePlotOrder = False
+        .ScaleType = xlLinear
+        .DisplayUnit = xlNone
+    End With
+
+    ActiveSheet.ChartObjects("Chart 1").Activate
+    ActiveChart.ChartArea.Select
+    
+    Range("A1").Select
+    
+End Sub
