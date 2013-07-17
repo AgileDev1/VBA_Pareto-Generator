@@ -9,4 +9,4 @@ This excel VBA based tool quickly generates a pareto chart for efficient data an
 Screenshots
 ------------
 
-http://www.azureconceptdesign.com/wp-content/uploads/2012/08/paretochart.jpg
+http://www.azureconceptdesign.com/pareto-the-easy-way
