@@ -1,0 +1,62 @@
+Sub Format_Pareto_Chart()
+
+    'Format Pareto
+    ActiveSheet.ChartObjects("Chart 1").Activate
+    ActiveChart.ChartArea.Select
+    With Selection.Border
+        .ColorIndex = 57
+        .Weight = 4
+        .LineStyle = 1
+    End With
+    ActiveSheet.DrawingObjects("Chart 1").RoundedCorners = False
+    ActiveSheet.DrawingObjects("Chart 1").Shadow = False
+    Selection.Fill.PresetGradient Style:=msoGradientFromCenter, Variant:=1, _
+        PresetGradientType:=msoGradientParchment
+    Selection.Fill.Visible = True
+    ActiveChart.SeriesCollection(1).Select
+    With Selection.Border
+        .ColorIndex = 3
+        .Weight = xlMedium
+        .LineStyle = xlContinuous
+    End With
+    Selection.Shadow = True
+    Selection.InvertIfNegative = False
+    Selection.Fill.PresetGradient Style:=msoGradientHorizontal, Variant:=1, _
+        PresetGradientType:=msoGradientEarlySunset
+    Selection.Fill.Visible = True
+    ActiveChart.SeriesCollection(2).Select
+    With Selection.Border
+        .ColorIndex = 5
+        .Weight = xlMedium
+        .LineStyle = xlContinuous
+    End With
+    With Selection
+        .MarkerBackgroundColorIndex = xlAutomatic
+        .MarkerForegroundColorIndex = xlAutomatic
+        .MarkerStyle = xlDiamond
+        .Smooth = False
+        .MarkerSize = 5
+        .Shadow = False
+    End With
+    ActiveWindow.Visible = False
+
+    Range("A1").Select
+    ActiveSheet.ChartObjects("Chart 1").Activate
+    ActiveChart.SeriesCollection(2).Select
+    With Selection.Border
+        .ColorIndex = 4
+        .Weight = xlThin
+        .LineStyle = xlContinuous
+    End With
+    With Selection
+        .MarkerBackgroundColorIndex = 5
+        .MarkerForegroundColorIndex = 5
+        .MarkerStyle = xlDiamond
+        .Smooth = True
+        .MarkerSize = 5
+        .Shadow = False
+    End With
+    ActiveWindow.Visible = False
+    Range("A1").Select
+    
+End Sub
