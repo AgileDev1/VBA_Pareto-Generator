@@ -1,4 +1,4 @@
-VB-ParetoGenerator
+Pareto Generator
 ==================
 
 The Pareto principle (also known as the 80–20 rule) states that, for many events, roughly 80% of the effects come from 20% of the causes. 
